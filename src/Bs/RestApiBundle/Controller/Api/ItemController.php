@@ -6,7 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
-use \Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use RestApiBundle\Entity\Item;
 use RestApiBundle\Form\ItemType;
@@ -23,6 +23,10 @@ class ItemController extends Controller {
         $item = new Item();
         $form = $this->createForm(ItemType::class, $item);
         $data = $this->processForm($request, $form);
+        
+        if (!$form->isValid()) {
+             return $this->createValidationErrorResponse($form);
+        }
         
         $item->setName($data['name']);
         $item->setAmount($data['amount']);
@@ -94,11 +98,8 @@ class ItemController extends Controller {
 
         $form = $this->createForm(ItemType::class, $item);
         $data = $this->processForm($request, $form);
-        if (!empty($data['name'])) {
-            $item->setName($data['name']);
-        }
-        if (!empty($data['name'])) {
-            $item->setAmount($data['amount']);
+        if (!$form->isValid()) {
+             return $this->createValidationErrorResponse($form);
         }
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($item);
@@ -142,5 +143,36 @@ class ItemController extends Controller {
             'amount' => $item->getAmount(),
         );
     }
+
+    private function getErrorsFromForm(Form $form)
+    {
+        $errors = array();
+        foreach ($form->getErrors() as $error) {
+            $errors[] = $error->getMessage();
+        }
+
+        foreach ($form->all() as $childForm) {
+            if ($childForm instanceof FormInterface) {
+                if ($childErrors = $this->getErrorsFromForm($childForm)) {
+                    $errors[$childForm->getName()] = $childErrors;
+                }
+            }
+        }
+
+        return $errors;
+    }
+   
+    private function createValidationErrorResponse(Form $form)    {       
+        $errors = $this->getErrorsFromForm($form);
+        $data = [            
+            'type' => 'validation_error',            
+            'title' => 'There was a validation error',            
+            'errors' => $errors        
+        ];
+        $response = new JsonResponse($data, 400);
+        $response->headers->set('Content-Type','application/problem+json');
+        return $response;    
+        
+    }  
 
 }

@@ -16,7 +16,7 @@ class ItemControllerTest extends ApiTestCase {
         
         $data = array(
             'name' => $name,
-            'amount' => rand(0, 999)
+            'amount' => rand(0, 10)
         );
         
         $client->request(
@@ -36,7 +36,7 @@ class ItemControllerTest extends ApiTestCase {
         $this->assertEquals($name, $responseData['name']);
         $location = explode('/', $response->headers->get('location'));
         $id = (int) $location[3];
-        $deletedItem = $this->deleteTestItem($id);
+        $this->deleteTestItem($id);
     }
     
     /** 
@@ -62,7 +62,7 @@ class ItemControllerTest extends ApiTestCase {
         $responseData = json_decode($response->getContent(), true);
         $this->assertArrayHasKey('name', $responseData);
         
-        $deletedItem = $this->deleteTestItem($id);
+        $this->deleteTestItem($id);
     }
     
     /** 
@@ -183,5 +183,31 @@ class ItemControllerTest extends ApiTestCase {
         $this->assertArrayHasKey('name', $responseData);
         
         $this->deleteTestItem($id);
+    }
+    
+    /** 
+     * @test 
+     */
+    public function testValidationErrors() {
+        $client = static::createClient();
+        
+        $data = array(
+            'amount' => rand(0, 10)
+        );
+        
+        $client->request(
+            'POST', 
+            '/api/items', 
+            array(),
+            array(),
+            array('CONTENT_TYPE' => 'application/json'),
+            json_encode($data)
+        );
+        
+        $response = $client->getResponse();        
+        $this->assertEquals(400, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('type', $responseData);
+        $this->assertEquals('application/problem+json', $response->headers->get('CONTENT_TYPE'));
     }
 }

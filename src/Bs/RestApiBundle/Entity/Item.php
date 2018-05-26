@@ -24,14 +24,14 @@ class Item
 
     /**
      * @var string
-     * @Assert\NotBlank()
+     * @Assert\NotBlank(message="Insert a valid name")
      * @ORM\Column(name="name", type="string", length=255)
      */
     private $name;
 
     /**
      * @var int
-     * @Assert\NotBlank()
+     * @Assert\NotBlank(message="Insert a valid amount")
      * @ORM\Column(name="amount", type="smallint")
      */
     private $amount;

@@ -34,6 +34,9 @@ class ItemControllerTest extends ApiTestCase {
         $responseData = json_decode($response->getContent(), true);
         $this->assertArrayHasKey('name', $responseData);
         $this->assertEquals($name, $responseData['name']);
+        $location = explode('/', $response->headers->get('location'));
+        $id = (int) $location[3];
+        $deletedItem = $this->deleteTestItem($id);
     }
     
     /** 

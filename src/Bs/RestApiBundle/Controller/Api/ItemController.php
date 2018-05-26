@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use RestApiBundle\Entity\Item;
 use RestApiBundle\Form\ItemType;
+use Symfony\Component\Form\Form;
 
 class ItemController extends Controller {
 
@@ -17,14 +18,11 @@ class ItemController extends Controller {
      * @Method({"POST"})
      */
     public function newAction(Request $request) {
-        $body = $request->getContent();
-        //zakładamy że przyszedł json
-        $data = json_decode($body, true);
-
+        
         $item = new Item();
         $form = $this->createForm(ItemType::class, $item);
-        $form->submit($data);
-
+        $data = $this->processForm($request, $form);
+        
         $item->setName($data['name']);
         $item->setAmount($data['amount']);
 
@@ -77,7 +75,46 @@ class ItemController extends Controller {
         $response = new JsonResponse($data, 200);
         return $response;
     }
+    
+    /**
+     * @Route("/api/items/{id}", name="api_items_update")
+     * @Method({"PUT"})
+     */
+    public function updateAction($id, Request $request) {
+        $item = $this->getDoctrine()
+                ->getRepository('RestApiBundle:Item')
+                ->findOneBy(array('id' => $id));
 
+        if (!$item) {
+            throw $this->createNotFoundException(sprintf(
+                            'No item found with given id "%s"', $id
+            ));
+        }
+        
+
+        $form = $this->createForm(ItemType::class, $item);
+        $data = $this->processForm($request, $form);
+
+        $item->setName($data['name']);
+        $item->setAmount($data['amount']);
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($item);
+        $entityManager->flush();
+        $serializedData = $this->serializeItem($item);
+        $response = new JsonResponse($serializedData, 200);
+
+        return $response;
+    }
+
+    private function processForm(Request $request, Form $form) {
+        $body = $request->getContent();
+        $data = json_decode($body, true);
+        
+        $form->submit($data);
+        return $data;
+    }
+    
     private function serializeItem(Item $item) {
         return array(
             'name' => $item->getName(),

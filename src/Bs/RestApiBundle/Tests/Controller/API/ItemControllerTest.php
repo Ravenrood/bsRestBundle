@@ -2,13 +2,13 @@
 
 namespace RestApiBundle\Tests\Controller\Api;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use RestApiBundle\Test\ApiTestCase;
 
 class ItemControllerTest extends ApiTestCase {
-//class ItemControllerTest extends TestCase {
 
-    /** @test */
+    /** 
+     * @test 
+     */
     public function testPOST() {
         $client = static::createClient();
 
@@ -35,5 +35,55 @@ class ItemControllerTest extends ApiTestCase {
         $this->assertArrayHasKey('name', $responseData);
         $this->assertEquals($name, $responseData['name']);
     }
-
+    
+    /** 
+     * @test 
+     */
+    public function testGetItem() {
+        $client = static::createClient();
+        
+        $data = array(
+            'name' => 'testItemName',
+            'amount' => rand(0,10)
+        );
+        
+        $item = $this->createTestItem($data);
+        
+        $id = $item->getId();
+        $client->request(
+            'Get', 
+            '/api/items/' .$id
+        );
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('name', $responseData);
+        
+        $deletedItem = $this->deleteTestItem($id);
+    }
+    
+    /** 
+     * @test 
+     */
+    public function testListItems() {
+        $client = static::createClient();
+        
+        $data = array(
+            'name' => 'testItemName',
+            'amount' => rand(0,10)
+        );
+        
+        $item = $this->createTestItem($data);
+        
+        $client->request(
+            'Get', 
+            '/api/items'
+        );
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('items', $responseData);
+        
+        $deletedItem = $this->deleteTestItem($id);
+    }
 }

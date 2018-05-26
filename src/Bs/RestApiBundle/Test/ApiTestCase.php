@@ -2,36 +2,52 @@
 
 namespace RestApiBundle\Test;
 
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use RestApiBundle\Entity\Item;
+//use AppBundle\Entity\Programmer;
+//use AppBundle\Entity\User;
+//use Doctrine\Common\DataFixtures\Purger\ORMPurger;
+use Doctrine\ORM\EntityManager;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Console\Helper\FormatterHelper;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class ApiTestCase extends KernelTestCase
+class ApiTestCase extends WebTestCase
 {
-    public static function setUpBeforeClass()
-    {
-        self::bootKernel();
-    }  
-    
-    protected function setUp()
-    {
-        $this->purgeDatabase();
-    }
-    /**
-     * Clean up Kernel usage in this test.
-     */
-    protected function tearDown()
-    {
-    }
-    
     protected function getService($id)
     {
         return self::$kernel->getContainer()
             ->get($id);
     }
-
-    private function purgeDatabase()
+    
+    protected function createTestItem(array $data)
     {
-        $purger = new ORMPurger($this->getService('doctrine')->getManager());
-        $purger->purge();
+        $item = new Item();
+        
+        $item->setName($data['name']);
+        $item->setAmount($data['amount']);
+
+
+        $this->getEntityManager()->persist($item);
+        $this->getEntityManager()->flush();
+
+        return $item;
+    }
+    
+    protected function deleteTestItem( $id )
+    {
+        $repository = $this->getEntityManager()->getRepository(Item::class);
+        $item = $repository->find($id);
+        $this->getEntityManager()->remove($item);
+        $this->getEntityManager()->flush();
+        return $item;
     }
 
+    protected function getEntityManager()
+    {
+        return $this->getService('doctrine.orm.entity_manager');
+    }
 }

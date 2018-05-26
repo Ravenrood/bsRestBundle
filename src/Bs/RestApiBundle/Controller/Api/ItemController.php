@@ -6,6 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
+use \Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use RestApiBundle\Entity\Item;
 use RestApiBundle\Form\ItemType;
@@ -105,6 +106,24 @@ class ItemController extends Controller {
         $response = new JsonResponse($serializedData, 200);
 
         return $response;
+    }
+    
+    /**
+     * @Route("/api/items/{id}")
+     * @Method({"DELETE"})
+     */
+    public function deleteAction($id, Request $request) {
+        $item = $this->getDoctrine()
+                ->getRepository('RestApiBundle:Item')
+                ->findOneBy(array('id' => $id));
+
+        if ($item) {
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->remove($item);
+            $entityManager->flush();
+        }
+        
+        return new Response(null, 204);
     }
 
     private function processForm(Request $request, Form $form) {

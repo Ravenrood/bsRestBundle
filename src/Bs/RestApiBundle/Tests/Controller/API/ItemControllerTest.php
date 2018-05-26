@@ -88,7 +88,7 @@ class ItemControllerTest extends ApiTestCase {
         $responseData = json_decode($response->getContent(), true);
         $this->assertArrayHasKey('items', $responseData);
         
-        $deletedItem = $this->deleteTestItem($id);
+        $this->deleteTestItem($id);
     }
     
     /** 
@@ -124,6 +124,29 @@ class ItemControllerTest extends ApiTestCase {
         $responseData = json_decode($response->getContent(), true);
         $this->assertArrayHasKey('name', $responseData);
         
-        $deletedItem = $this->deleteTestItem($id);
+        $this->deleteTestItem($id);
+    }
+    
+    /** 
+     * @test 
+     */
+    public function testDeleteItem() {
+        $client = static::createClient();
+        
+        $data = array(
+            'name' => 'testItemName',
+            'amount' => rand(0,10)
+        );
+        
+        $item = $this->createTestItem($data);
+        
+        $id = $item->getId();
+        
+        $client->request(
+            'DELETE', 
+            '/api/items/' . $id
+        );
+        $response = $client->getResponse();
+        $this->assertEquals(204, $response->getStatusCode());
     }
 }

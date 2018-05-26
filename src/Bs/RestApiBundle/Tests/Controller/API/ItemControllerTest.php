@@ -149,4 +149,39 @@ class ItemControllerTest extends ApiTestCase {
         $response = $client->getResponse();
         $this->assertEquals(204, $response->getStatusCode());
     }
+    
+    /** 
+     * @test 
+     */
+    public function testPatchItem() {
+        $client = static::createClient();
+        
+        $data = array(
+            'name' => 'testItemName',
+            'amount' => rand(0,10)
+        );
+        
+        $item = $this->createTestItem($data);
+        
+        $id = $item->getId();
+        
+        $dataChanged = array(
+            'amount' => rand(0,10)
+        );
+        
+        $client->request(
+            'PATCH', 
+            '/api/items/' . $id, 
+            array(),
+            array(),
+            array('CONTENT_TYPE' => 'application/json'),
+            json_encode($dataChanged)
+        );
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('name', $responseData);
+        
+        $this->deleteTestItem($id);
+    }
 }

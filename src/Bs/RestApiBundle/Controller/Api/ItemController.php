@@ -79,7 +79,7 @@ class ItemController extends Controller {
     
     /**
      * @Route("/api/items/{id}", name="api_items_update")
-     * @Method({"PUT"})
+     * @Method({"PUT", "PATCH"})
      */
     public function updateAction($id, Request $request) {
         $item = $this->getDoctrine()
@@ -91,14 +91,15 @@ class ItemController extends Controller {
                             'No item found with given id "%s"', $id
             ));
         }
-        
 
         $form = $this->createForm(ItemType::class, $item);
         $data = $this->processForm($request, $form);
-
-        $item->setName($data['name']);
-        $item->setAmount($data['amount']);
-
+        if (!empty($data['name'])) {
+            $item->setName($data['name']);
+        }
+        if (!empty($data['name'])) {
+            $item->setAmount($data['amount']);
+        }
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($item);
         $entityManager->flush();
@@ -130,7 +131,8 @@ class ItemController extends Controller {
         $body = $request->getContent();
         $data = json_decode($body, true);
         
-        $form->submit($data);
+        $clearMissing = $request->getMethod() != 'PATCH';
+        $form->submit($data, $clearMissing);
         return $data;
     }
     

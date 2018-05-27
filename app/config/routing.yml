@@ -2,6 +2,8 @@ rest_api:
     resource: "@RestApiBundle/Controller/"
     type:     annotation
     prefix:   /
+    defaults:
+        _format: json
 
 app:
     resource: '@AppBundle/Controller/'

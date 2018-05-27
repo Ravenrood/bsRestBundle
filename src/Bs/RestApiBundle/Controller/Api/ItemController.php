@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use RestApiBundle\Entity\Item;
 use RestApiBundle\Form\ItemType;
 use Symfony\Component\Form\Form;
+use RestApiBundle\Api\ApiProblem;
+use Symfony\Component\HttpKernel\Exception;
+use RestApiBundle\Api\ApiProblemException;
 
 class ItemController extends Controller {
 
@@ -25,7 +28,7 @@ class ItemController extends Controller {
         $data = $this->processForm($request, $form);
         
         if (!$form->isValid()) {
-             return $this->createValidationErrorResponse($form);
+            $this->throwApiProblemValidationException($form);
         }
         
         $item->setName($data['name']);
@@ -99,7 +102,7 @@ class ItemController extends Controller {
         $form = $this->createForm(ItemType::class, $item);
         $data = $this->processForm($request, $form);
         if (!$form->isValid()) {
-             return $this->createValidationErrorResponse($form);
+             $this->throwApiProblemValidationException($form);
         }
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($item);
@@ -131,7 +134,15 @@ class ItemController extends Controller {
     private function processForm(Request $request, Form $form) {
         $body = $request->getContent();
         $data = json_decode($body, true);
-        
+        if (null === $data) {
+            $apiProblem = new ApiProblem(
+                    400, 
+                    ApiProblem::TYPE_INVALID_REQUEST_BODY_FORMAT
+                    );
+            throw new ApiProblemException(
+                    $apiProblem
+            );
+        }
         $clearMissing = $request->getMethod() != 'PATCH';
         $form->submit($data, $clearMissing);
         return $data;
@@ -162,17 +173,15 @@ class ItemController extends Controller {
         return $errors;
     }
    
-    private function createValidationErrorResponse(Form $form)    {       
+    private function throwApiProblemValidationException(Form $form)    {       
         $errors = $this->getErrorsFromForm($form);
-        $data = [            
-            'type' => 'validation_error',            
-            'title' => 'There was a validation error',            
-            'errors' => $errors        
-        ];
-        $response = new JsonResponse($data, 400);
-        $response->headers->set('Content-Type','application/problem+json');
-        return $response;    
         
+        $apiProblem = new ApiProblem(
+                400, 
+                ApiProblem::TYPE_VALIADTION_ERROR
+        );
+        $apiProblem->set ('error', $errors);
+        throw new ApiProblemException($apiProblem);        
     }  
 
 }

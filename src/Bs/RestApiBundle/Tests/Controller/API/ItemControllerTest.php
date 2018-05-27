@@ -207,7 +207,29 @@ class ItemControllerTest extends ApiTestCase {
         $response = $client->getResponse();        
         $this->assertEquals(400, $response->getStatusCode());
         $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('error', $responseData);
         $this->assertArrayHasKey('type', $responseData);
         $this->assertEquals('application/problem+json', $response->headers->get('CONTENT_TYPE'));
+    }
+    
+    /** 
+     * @test 
+     */
+    public function testInvalidJson() {
+        $client = static::createClient();
+        
+        $invalidJson = '{ "amount" : 1 }';
+        
+        $client->request(
+            'POST', 
+            '/api/items', 
+            array(),
+            array(),
+            array('CONTENT_TYPE' => 'application/json'),
+            json_encode($invalidJson)
+        );
+        
+        $response = $client->getResponse();        
+        $this->assertEquals(400, $response->getStatusCode());
     }
 }

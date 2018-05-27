@@ -232,4 +232,22 @@ class ItemControllerTest extends ApiTestCase {
         $response = $client->getResponse();        
         $this->assertEquals(400, $response->getStatusCode());
     }
+    
+    /** 
+     * @test 
+     */
+    public function testNotFoundException() {
+        $client = static::createClient();
+        
+        $client->request(
+            'GET', 
+            '/api/itms'
+        );
+        $response = $client->getResponse(); 
+        $this->assertEquals(404, $response->getStatusCode());
+        $this->assertEquals('application/problem+json', $response->headers->get('CONTENT_TYPE'));
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('title', $responseData);
+        $this->assertContains('Not Found', $responseData);
+    }
 }

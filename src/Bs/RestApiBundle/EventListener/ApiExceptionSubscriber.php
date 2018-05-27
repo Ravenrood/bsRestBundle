@@ -6,11 +6,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpFoundation\JsonResponse;
-
 use RestApiBundle\Api\ApiProblem;
 use RestApiBundle\Api\ApiProblemException;
-
-
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ApiExceptionSubscriber implements EventSubscriberInterface
@@ -19,10 +16,16 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
     {
         $e = $event->getException();
         
-        if (!$e instanceof ApiProblemException) {
-            return;
+        if ($e instanceof ApiProblemException) {
+            $apiProblem = $e->getApiProblem();
+        } else {
+            $statusCode = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
+            $apiProblem = new ApiProblem ($statusCode);
+            
+            if ($e instanceof HttpExceptionInterface) {
+                $apiProblem->set('detail', $e->getMessage());
+            }
         }
-        $apiProblem = $e->getApiProblem();
         $response = new JsonResponse(
             $apiProblem->toArray(),
             $apiProblem->getStatusCode()

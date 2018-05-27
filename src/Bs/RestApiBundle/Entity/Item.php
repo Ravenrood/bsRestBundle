@@ -94,5 +94,19 @@ class Item
     {
         return $this->amount;
     }
+    
+    /**
+     * Get whole item Data
+     *
+     * @return array
+     */
+    public function getArrayRow()
+    {
+        return array(
+            'id' => $this->id,
+            'name' => $this->name,
+            'amount' => $this->amount
+         );
+    }
 }
 

@@ -10,4 +10,8 @@ namespace RestApiBundle\Repository;
  */
 class ItemRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function findAllQueryBuilder() 
+    {
+        return $this->createQueryBuilder('item');
+    }
 }

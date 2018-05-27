@@ -14,6 +14,9 @@ use Symfony\Component\Form\Form;
 use RestApiBundle\Api\ApiProblem;
 use Symfony\Component\HttpKernel\Exception;
 use RestApiBundle\Api\ApiProblemException;
+use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Pagerfanta;
+use RestApiBundle\Pagination\PaginatedCollection;
 
 class ItemController extends Controller {
 
@@ -69,18 +72,48 @@ class ItemController extends Controller {
     }
 
     /**
-     * @Route("/api/items")
+     * @Route("/api/items", name="api_items_collection")
      * @Method("GET")
      */
-    public function listAction() {
-        $items = $this->getDoctrine()
+    public function listAction(Request $request) {
+        
+        $page = $request->query->get('page', 1);
+        
+        $qb = $this->getDoctrine()
                 ->getRepository('RestApiBundle:Item')
-                ->findAll();
-        $data = ['items' => []];
-        foreach ($items as $item) {
-            $data ['items'][] = $this->serializeItem($item);
+                ->findAllQueryBuilder();
+        
+        $adapter = new DoctrineORMAdapter($qb);
+        $pagerfanta = new Pagerfanta ($adapter);
+        $pagerfanta->setMaxperPage(10);
+        $pagerfanta->setCurrentPage($page);
+        
+        $items = array();
+        foreach ($pagerfanta->getCurrentPageResults() as $item) {
+            $items[] = $item->getArrayRow();
         }
-        $response = new JsonResponse($data, 200);
+        
+        $paginatedCollection = new PaginatedCollection ($items, $pagerfanta->getNbResults());
+        
+        $route = 'api_items_collection';
+        $routeParams = array();
+        $createLinkUrl = function($targetPage)use ($route, $routeParams){
+            return $this->generateUrl($route, array_merge($routeParams, array('page' => $targetPage)
+                    ));
+        };
+        
+        $paginatedCollection->addLink('self', $createLinkUrl($page));
+        $paginatedCollection->addLink('first', $createLinkUrl($page));
+        $paginatedCollection->addLink('last', $createLinkUrl($pagerfanta->getNbPages()));
+        
+        if ($pagerfanta->hasNextPage()) {
+            $paginatedCollection->addLink('next', $createLinkUrl($pagerfanta->getNextPage()));
+        }
+        if ($pagerfanta->hasPreviousPage()) {
+            $paginatedCollection->addLink('prev', $createLinkUrl($pagerfanta->getPreviousPage()));
+        }
+       
+        $response = new JsonResponse($paginatedCollection->returnArray(), 200);
         return $response;
     }
     

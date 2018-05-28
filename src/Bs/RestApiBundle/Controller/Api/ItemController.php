@@ -73,11 +73,11 @@ class ItemController extends Controller {
      */
     public function listAction(Request $request) {
         
-        $page = $request->query->get('page', 1);
-        
+        $filter =  $request->query->get('filter');
+                
         $qb = $this->getDoctrine()
                 ->getRepository('RestApiBundle:Item')
-                ->findAllQueryBuilder();
+                ->findAllQueryBuilder($filter);
         
         $paginatedCollection = $this->get('pagination_factory')->createCollection($qb, $request, 'api_items_collection');
        

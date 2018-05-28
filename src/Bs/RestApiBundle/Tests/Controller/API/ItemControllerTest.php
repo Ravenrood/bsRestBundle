@@ -279,6 +279,35 @@ class ItemControllerTest extends ApiTestCase {
         foreach ($ids as $deleteId) {
            $this->deleteTestItem($deleteId);
         }
+    }
+    
+    /** 
+     * @test 
+     */
+    public function testListItemsFiltering() {
+        $client = static::createClient();
+        $ids = array();
+        for ($i=0; $i<25; $i++) {
+            $data = array(
+                'name' => 'testItemName ' . rand(0,10),
+                'amount' => 3
+            );
+
+            $item = $this->createTestItem($data);
+            $id = $item->getId();
+            $ids[] = $id;
+        }
         
+        $client->request(
+            'GET', 
+            '/api/items?filter=3'
+        );
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('items', $responseData);
+        foreach ($ids as $deleteId) {
+           $this->deleteTestItem($deleteId);
+        }
     }
 }

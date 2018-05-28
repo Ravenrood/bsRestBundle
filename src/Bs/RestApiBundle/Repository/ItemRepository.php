@@ -10,8 +10,13 @@ namespace RestApiBundle\Repository;
  */
 class ItemRepository extends \Doctrine\ORM\EntityRepository
 {
-    public function findAllQueryBuilder() 
+    public function findAllQueryBuilder($filter = '') 
     {
-        return $this->createQueryBuilder('item');
+        $qb = $this->createQueryBuilder('item');
+        if ($filter) {
+            $qb->andWhere('item.amount = :filter')
+            ->setParameter('filter', (int)$filter);
+        }
+        return $qb;
     }
 }

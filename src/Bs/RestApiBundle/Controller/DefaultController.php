@@ -11,7 +11,7 @@ use RestApiBundle\Form\ItemType;
 class DefaultController extends Controller
 {
     /**
-     * @Route("/")
+     * @Route("/editform")
      */
     public function indexAction(Request $request)
     {

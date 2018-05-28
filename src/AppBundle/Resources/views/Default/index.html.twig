@@ -1,0 +1,16 @@
+<ul>
+    {% for item in items %}
+        <li> {{ item.id }} | {{ item.name }} | {{ item.amount }} <a href="{{ actualUrl }}?delete={{ item.modify }}">del</a> <a href="{{ actualUrl }}?edit={{ item.modify }}">edit</a></li>
+    {% endfor %}
+</ul>
+<a href="{{ actualUrl }}?apicall={{ _links.first }}">first</a>
+{% if _links.prev is defined %} <a href="{{ actualUrl }}?apicall={{ _links.prev }}"><< prev</a> {% endif %}
+{% if _links.next is defined %} <a href="{{ actualUrl }}?apicall={{ _links.next }}">next >></a> {% endif %}
+<a href="{{ actualUrl }}?apicall={{ _links.last }}">last</a>
+<br/><br/>
+1. Produkty które nie znajdują się na składzie:
+<ul>
+    {% for itemNA in notAvailable %}
+        <li> {{ itemNA.id }} | {{ itemNA.name }} | {{ itemNA.amount }}</li>
+    {% endfor %}
+</ul>

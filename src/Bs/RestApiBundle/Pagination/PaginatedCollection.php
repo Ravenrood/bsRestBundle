@@ -23,7 +23,7 @@ class PaginatedCollection
     { 
         $returnArray = array();
         foreach ($this->items as $item) {
-            $returnArray[] = (array)$item;
+            $returnArray[] = $item->getArrayRow();
         } 
         return array(
             'items' => $returnArray,

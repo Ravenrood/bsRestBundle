@@ -34,6 +34,10 @@ services:
         arguments: []
         tags:
             - { name: kernel.event_subscriber }
+    pagination_factory:
+        class: RestApiBundle\Pagination\PaginationFactory
+        public: true
+        arguments: ['@router']
     # add more services, or override services that need manual wiring
     # AppBundle\Service\ExampleService:
     #     arguments:

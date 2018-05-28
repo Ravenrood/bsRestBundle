@@ -12,11 +12,7 @@ use RestApiBundle\Entity\Item;
 use RestApiBundle\Form\ItemType;
 use Symfony\Component\Form\Form;
 use RestApiBundle\Api\ApiProblem;
-use Symfony\Component\HttpKernel\Exception;
 use RestApiBundle\Api\ApiProblemException;
-use Pagerfanta\Adapter\DoctrineORMAdapter;
-use Pagerfanta\Pagerfanta;
-use RestApiBundle\Pagination\PaginatedCollection;
 
 class ItemController extends Controller {
 
@@ -83,37 +79,9 @@ class ItemController extends Controller {
                 ->getRepository('RestApiBundle:Item')
                 ->findAllQueryBuilder();
         
-        $adapter = new DoctrineORMAdapter($qb);
-        $pagerfanta = new Pagerfanta ($adapter);
-        $pagerfanta->setMaxperPage(10);
-        $pagerfanta->setCurrentPage($page);
-        
-        $items = array();
-        foreach ($pagerfanta->getCurrentPageResults() as $item) {
-            $items[] = $item->getArrayRow();
-        }
-        
-        $paginatedCollection = new PaginatedCollection ($items, $pagerfanta->getNbResults());
-        
-        $route = 'api_items_collection';
-        $routeParams = array();
-        $createLinkUrl = function($targetPage)use ($route, $routeParams){
-            return $this->generateUrl($route, array_merge($routeParams, array('page' => $targetPage)
-                    ));
-        };
-        
-        $paginatedCollection->addLink('self', $createLinkUrl($page));
-        $paginatedCollection->addLink('first', $createLinkUrl($page));
-        $paginatedCollection->addLink('last', $createLinkUrl($pagerfanta->getNbPages()));
-        
-        if ($pagerfanta->hasNextPage()) {
-            $paginatedCollection->addLink('next', $createLinkUrl($pagerfanta->getNextPage()));
-        }
-        if ($pagerfanta->hasPreviousPage()) {
-            $paginatedCollection->addLink('prev', $createLinkUrl($pagerfanta->getPreviousPage()));
-        }
+        $paginatedCollection = $this->get('pagination_factory')->createCollection($qb, $request, 'api_items_collection');
        
-        $response = new JsonResponse($paginatedCollection->returnArray(), 200);
+        $response = new JsonResponse($paginatedCollection, 200);
         return $response;
     }
     
